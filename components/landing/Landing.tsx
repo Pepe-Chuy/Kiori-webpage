@@ -6,15 +6,17 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 /* ============================================================
-   LANDING DE KIORI (kiori_spec.md §13)
+   LANDING DE KIORI — v2
    ------------------------------------------------------------
-   - Las 4 primeras secciones se reproducen tal cual el diseño
-     (Landing.svg) y se animan con scroll-driven transitions
-     (GSAP + ScrollTrigger, pinned + scrub) en escritorio.
-   - En móvil (≤768px) las animaciones se simplifican a fade-in
-     al entrar en viewport (sin animaciones direccionales).
-   - Las secciones 5-7 (catálogo, clases, registro) continúan en
-     scroll normal con fade-ins.
+   CAMBIOS APLICADOS EN ESTA VERSIÓN:
+   1. Video con espejo horizontal (scaleX -1) → la mujer queda a la derecha
+   2. Logo de Kiori metido dentro del Hero (encima del eyebrow)
+      → el navbar ya no debería mostrar el logo (ver nota al final)
+   3. Eyebrow: Raleway, tamaño mayor, letter-spacing reducido
+   4. Títulos hero: letter-spacing negativo → letras más compactas/rectangulares
+   5. Botón CTA sacado de HeroContent y posicionado absolutamente
+      al fondo del hero, centrado, color rose, texto negro Raleway thin
+   6. Overlay del hero ligeramente más opaco para mejor legibilidad
    ============================================================ */
 
 // ---- Textos del diseño (fuente de verdad: Landing.svg) ----
@@ -49,20 +51,53 @@ const SERVICES = [
   { img: "/landing/card-productos.png", label: ["PRODUCTOS", "KIORI"], href: "/tienda", cls: "card-right" },
 ];
 
-// ---- Bloques de contenido reutilizables ----
-
+/* ----------------------------------------------------------------
+   COMPONENTE: HeroContent
+   CAMBIOS vs v1:
+   - Se agregó el bloque .hero-brand (logo grande) arriba del eyebrow
+   - Se ELIMINÓ el <Link> del botón CTA de aquí
+     El botón ahora vive como hermano del kiori-container en el JSX
+     del hero, posicionado absolutamente al fondo (hero-cta-bottom)
+   ---------------------------------------------------------------- */
 function HeroContent() {
   return (
     <div className="hero-text">
+
+      {/*
+        NUEVO: Logo de Kiori grande dentro del hero.
+        Antes estaba solo en el navbar; ahora vive aquí.
+        Asegúrate de que la ruta sea correcta para tu proyecto.
+        Si tu logo stacked (icono + texto apilados) es un archivo
+        distinto al horizontal, cámbia el src aquí.
+      */}
+      <div className="hero-brand">
+        <img
+          src="/landing/logo-teal.png"
+          alt="Kiori"
+          className="hero-brand-img"
+        />
+      </div>
+
+      {/* Eyebrow: ahora Raleway, más grande, letter-spacing reducido */}
       <p className="hero-eyebrow">{TXT.heroEyebrow}</p>
+
+      {/*
+        Títulos: el letter-spacing negativo (-0.03em) comprime las letras
+        horizontalmente, dando ese efecto "casi rectangular" del diseño target.
+      */}
       <h1 className="hero-title">
         <span className="hero-line1">{TXT.heroTitle1}</span>
         <span className="italic-accent hero-line2">{TXT.heroTitle2}</span>
       </h1>
-      <Link href="/registrarse" className="btn-pill btn-nude hero-cta">{TXT.heroCta}</Link>
+
+      {/* El botón CTA ya NO va aquí — ver .hero-cta-bottom más abajo */}
     </div>
   );
 }
+
+/* ----------------------------------------------------------------
+   Los demás componentes de contenido no cambian
+   ---------------------------------------------------------------- */
 
 function Section2Content() {
   return (
@@ -147,7 +182,7 @@ export default function Landing() {
         },
       });
 
-      // Estados iniciales
+      // Estados iniciales (no cambian respecto a v1)
       gsap.set(".layer-hero", { opacity: 1 });
       gsap.set(".s2-scene", { opacity: 0 });
       gsap.set(".s2-text", { xPercent: -10, opacity: 0 });
@@ -162,6 +197,8 @@ export default function Landing() {
       gsap.set(".card-img", { opacity: 0 });
 
       // ---- Fase A: Hero → Sección 2 ----
+      // El botón (.hero-cta-bottom) está dentro de .layer-hero,
+      // así que cuando el layer hace fade out, el botón también desaparece.
       tl.to(".layer-hero", { opacity: 0, duration: 1 }, 0)
         .to(".hero-text", { yPercent: -28, duration: 1 }, 0)
         .to(".s2-scene", { opacity: 1, duration: 0.4 }, 0.25)
@@ -218,7 +255,6 @@ export default function Landing() {
       });
     }, restRef);
 
-    // Recalcula posiciones una vez montado todo (imágenes, fuentes).
     ScrollTrigger.refresh();
 
     return () => {
@@ -231,35 +267,51 @@ export default function Landing() {
     <>
       {/* ===================== ESCRITORIO: STAGE ANIMADO ===================== */}
       <div ref={stageRef} className="stage" aria-hidden={false}>
-        {/* base color blanco rosado (siempre presente detrás de las escenas) */}
         <div className="layer layer-blush" />
 
-        {/* Sección 1 — Hero (video de fondo) */}
+        {/*
+          SECCIÓN 1 — Hero
+          CAMBIOS vs v1:
+          - El video tiene transform: scaleX(-1) en CSS → espejo horizontal
+          - Se agregó el bloque HeroContent (sin botón)
+          - El botón CTA está ahora FUERA de kiori-container,
+            posicionado absolutamente al fondo y centrado horizontalmente
+        */}
         <div className="layer layer-hero">
           <video className="hero-video" autoPlay muted loop playsInline poster="">
             <source src="/landing/hero-video.mp4" type="video/mp4" />
           </video>
           <div className="hero-overlay" />
+
+          {/* Texto del hero: logo + eyebrow + título */}
           <div className="kiori-container hero-inner">
             <HeroContent />
           </div>
+
+          {/*
+            NUEVO: Botón CTA separado del texto, posicionado al fondo centrado.
+            Usa btn-pill (base) + btn-hero-cta (colores/fuente) + hero-cta-bottom (posición).
+          */}
+          <Link href="/registrarse" className="btn-pill btn-hero-cta hero-cta-bottom">
+            {TXT.heroCta}
+          </Link>
         </div>
 
-        {/* Sección 2 — Espacio de bienestar */}
+        {/* Sección 2 — Espacio de bienestar (sin cambios) */}
         <div className="layer layer-s2">
           <div className="kiori-container s2-scene">
             <Section2Content />
           </div>
         </div>
 
-        {/* Sección 3 — Misión y visión (fondo fotográfico) */}
+        {/* Sección 3 — Misión y visión (sin cambios) */}
         <div className="layer layer-picnic">
           <div className="kiori-container mission-inner">
             <MissionBox />
           </div>
         </div>
 
-        {/* Sección 4 — Servicios */}
+        {/* Sección 4 — Servicios (sin cambios) */}
         <div className="layer layer-s4">
           <div className="kiori-container">
             <ServiciosContent />
@@ -270,6 +322,7 @@ export default function Landing() {
       {/* ===================== MÓVIL: SECCIONES APILADAS ===================== */}
       <div ref={mobileRef} className="mobile-stack">
         <section className="m-hero">
+          {/* El video en móvil también va en espejo via CSS */}
           <video className="hero-video" autoPlay muted loop playsInline>
             <source src="/landing/hero-video.mp4" type="video/mp4" />
           </video>
@@ -277,6 +330,10 @@ export default function Landing() {
           <div className="kiori-container hero-inner m-reveal">
             <HeroContent />
           </div>
+          {/* Botón al fondo también en móvil */}
+          <Link href="/registrarse" className="btn-pill btn-hero-cta hero-cta-bottom m-reveal">
+            {TXT.heroCta}
+          </Link>
         </section>
 
         <section className="m-section m-s2">
@@ -292,9 +349,8 @@ export default function Landing() {
         </section>
       </div>
 
-      {/* ===================== SECCIONES 5-7 (scroll normal) ===================== */}
+      {/* ===================== SECCIONES 5-7 (scroll normal, sin cambios) ===================== */}
       <div ref={restRef}>
-        {/* Sección 5 — Catálogo / colecciones */}
         <section className="catalog">
           <div className="catalog-hero reveal">
             <img className="catalog-img" src="/landing/products-flatlay.jpg" alt="Productos Kiori" />
@@ -325,7 +381,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Sección 6 — Clases */}
         <section className="clases">
           <div className="clases-banner reveal">
             <img src="/landing/purple-mat.jpg" alt="Clases de Kiori" />
@@ -343,7 +398,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Sección 7 — Registro / bienvenida */}
         <section className="signup reveal">
           <SignupSection />
         </section>
@@ -354,7 +408,7 @@ export default function Landing() {
   );
 }
 
-// ---- Sección de registro (réplica del diseño) ----
+// ---- Sección de registro (sin cambios) ----
 function SignupSection() {
   return (
     <div className="kiori-container signup-grid">
@@ -390,7 +444,7 @@ function SignupSection() {
   );
 }
 
-// ---- Estilos del landing (colocados con el componente) ----
+// ---- Estilos del landing ----
 function LandingStyles() {
   return (
     <style jsx global>{`
@@ -424,32 +478,151 @@ function LandingStyles() {
       }
       .layer-s4 { z-index: 6; display: flex; align-items: center; background: var(--color-blush); }
 
-      /* ====== HERO ====== */
+      /* ====== HERO VIDEO: ESPEJO HORIZONTAL ====== */
+      /*
+        scaleX(-1) refleja el video sobre el eje Y.
+        Resultado: la mujer que estaba a la izquierda queda a la derecha,
+        dejando el espacio limpio del lado izquierdo para el texto.
+        Esto aplica igual en escritorio y en móvil (misma clase .hero-video).
+      */
       .hero-video {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1); /* CAMBIO: espejo horizontal */
       }
+
+      /* ====== HERO OVERLAY ====== */
+      /*
+        Overlay ligeramente más opaco que v1 (.35 → .55) para que el texto
+        sea más legible sobre el video sin que se pierda la imagen de fondo.
+        El gradiente va de izquierda (donde está el texto) hacia la derecha
+        (donde está la mujer), desapareciendo suavemente al 65%.
+      */
       .hero-overlay {
-        position: absolute; inset: 0;
-        background: linear-gradient(90deg, rgba(237,230,233,.35) 0%, rgba(237,230,233,0) 55%);
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(237,230,233,.55) 0%,   /* más opaco sobre el área de texto */
+          rgba(237,230,233,.15) 65%,  /* semitransparente en la mitad */
+          rgba(237,230,233,0) 85%     /* completamente transparente hacia la derecha */
+        );
       }
+
       .hero-inner {
-        position: relative; z-index: 2; height: 100vh;
-        display: flex; flex-direction: column; justify-content: center;
+        position: relative;
+        z-index: 2;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* centrado vertical */
       }
+
+      /* ====== LOGO EN EL HERO ====== */
+      /*
+        Bloque nuevo: el logo de Kiori (icono + texto) aparece aquí,
+        antes del eyebrow, dentro del stack de texto del hero.
+        La clase hero-brand-img tiene un tamaño generoso para
+        que sea "grande" como en el target.
+
+        NOTA: si tu logo horizontal se ve extraño en este tamaño,
+        crea/usa una versión stacked (icono arriba, KIORI abajo)
+        y cambia el src a esa ruta.
+      */
+      .hero-brand {
+        margin-bottom: 1.4rem;
+      }
+      .hero-brand-img {
+        /* Ajustable según si el logo es horizontal o apilado */
+        height: clamp(3.5rem, 6vw, 5.5rem);
+        width: auto;
+        display: block;
+      }
+
+      /* ====== HERO EYEBROW ====== */
+      /*
+        CAMBIOS vs v1:
+        - font-family: Raleway (asegúrate de que esté configurado en tu proyecto,
+          ya sea via next/font o import en globals.css)
+        - font-size: clamp sube de (.6rem–.8rem) a (.85rem–1.1rem) → más visible
+        - letter-spacing: baja de .22em a .14em → más compacto, acorde al target
+      */
       .hero-eyebrow {
-        font-family: var(--font-display);
-        text-transform: uppercase; letter-spacing: .22em;
-        font-size: clamp(.6rem, 1vw, .8rem); color: var(--color-sage);
-        margin: 0 0 1rem;
+        font-family: 'Raleway', var(--font-display), sans-serif;
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        font-size: clamp(.85rem, 1.4vw, 1.1rem);
+        color: var(--color-sage);
+        margin: 0 0 .9rem;
       }
+
       .hero-title { line-height: .98; margin: 0; }
+
+      /* ====== TÍTULOS HERO: MÁS COMPACTOS ====== */
+      /*
+        letter-spacing negativo (-0.03em) comprime el espacio entre letras,
+        dando ese efecto "casi rectangular" o "apretado" del diseño target.
+        Antes era .01em (muy ligeramente expandido).
+      */
       .hero-line1 {
-        display: block; font-family: var(--font-display); font-weight: 700;
-        color: var(--color-sage); font-size: clamp(2.6rem, 7vw, 6rem);
-        letter-spacing: .01em;
+        display: block;
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--color-sage);
+        font-size: clamp(2.6rem, 7vw, 6rem);
+        letter-spacing: -0.03em; /* CAMBIO: antes .01em */
       }
-      .hero-line2 { display: block; font-size: clamp(2.6rem, 7vw, 6rem); line-height: .98; }
-      .hero-cta { margin-top: 2.2rem; align-self: flex-start; }
+      .hero-line2 {
+        display: block;
+        font-size: clamp(2.6rem, 7vw, 6rem);
+        line-height: .95;
+        letter-spacing: -0.03em; /* CAMBIO: misma compactación */
+      }
+
+      /* ====== BOTÓN CTA DEL HERO: ESTILO ====== */
+      /*
+        Clase nueva que reemplaza btn-nude para el hero.
+        - background: var(--color-rose) → rosa suave del sistema de colores
+        - color: #1a1a1a → negro (no blanco)
+        - font-family: Raleway thin (weight 300)
+        - letter-spacing: .16em → mantiene el tracking de botón tipo pill
+        Se combina con .btn-pill (que aporta el border-radius y padding base)
+        y con .hero-cta-bottom (que aporta la posición absoluta).
+      */
+      .btn-hero-cta {
+        background: var(--color-rose);
+        color: #1a1a1a;
+        font-family: 'Raleway', var(--font-display), sans-serif;
+        font-weight: 300;         /* delgada, no bold */
+        letter-spacing: .16em;
+        border: none;
+        font-size: clamp(.72rem, .95vw, .85rem);
+        transition: background .25s ease, color .25s ease;
+      }
+      .btn-hero-cta:hover {
+        background: var(--color-nude-deep);
+        color: #fff;
+      }
+
+      /* ====== POSICIÓN DEL BOTÓN CTA: FONDO CENTRADO ====== */
+      /*
+        position: absolute dentro del .layer-hero (que es position: absolute; inset: 0).
+        left: 50% + transform: translateX(-50%) = centrado horizontal exacto.
+        bottom: clamp sitúa el botón a entre 2rem y 4.5rem del borde inferior.
+        z-index: 10 para que quede por encima del video, overlay y texto.
+        white-space: nowrap evita que el texto del botón salte de línea.
+      */
+      .hero-cta-bottom {
+        position: absolute;
+        bottom: clamp(2rem, 5vh, 4.5rem);
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        z-index: 10;
+      }
 
       /* ====== SECCIÓN 2 ====== */
       .s2-scene { width: 100%; }
@@ -571,7 +744,7 @@ function LandingStyles() {
       .signup-title { font-size: clamp(1.8rem, 3.4vw, 3rem); color: var(--color-sage); font-weight: 700; line-height: 1.05; margin-bottom: 2rem; }
       .signup-title .italic-accent { font-size: inherit; }
       .signup-form { display: flex; flex-direction: column; gap: .4rem; max-width: 38rem; }
-      .field-label { font-family: var(--font-display); color: var(--color-nude); letter-spacing: .12em; font-size: .72rem; margin-top: .9rem; }
+      .field-label { font-family: var(--font-accent); color: var(--color-nude); letter-spacing: .12em; font-size: .72rem; margin-top: .9rem; }
       .field-input {
         border: 1.5px solid rgba(63,91,90,.55); background: transparent; border-radius: 12px;
         padding: .8rem 1rem; font-family: var(--font-body); font-size: 1rem; color: var(--color-ink);
@@ -579,7 +752,7 @@ function LandingStyles() {
       }
       .field-input:focus { border-color: var(--color-sage); }
       .signup-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 1.4rem; flex-wrap: wrap; gap: 1rem; }
-      .remember { display: flex; align-items: center; gap: .5rem; font-family: var(--font-display); color: var(--color-nude); font-size: .72rem; letter-spacing: .1em; }
+      .remember { display: flex; align-items: center; gap: .5rem; font-family: var(--font-accent); color: var(--color-nude); font-size: .72rem; letter-spacing: .1em; }
       .signup-icon { font-size: 1rem; }
 
       /* ====== MÓVIL ====== */
@@ -599,7 +772,40 @@ function LandingStyles() {
         .clases-row { grid-template-columns: repeat(2, 1fr); }
         .signup-grid { grid-template-columns: 1fr; }
         .catalog-cta { position: static; display: inline-flex; margin: 1.5rem var(--gutter) 0; }
+
+        /* Ajuste del logo en el hero para móvil */
+        .hero-brand-img { height: clamp(2.8rem, 12vw, 4rem); }
       }
     `}</style>
   );
 }
+
+/*
+  ================================================================
+  NOTA IMPORTANTE — NAVBAR LOGO
+  ================================================================
+  El logo que aparece en el navbar superior vive probablemente en
+  un archivo separado como:
+    - app/layout.tsx (tu layout raíz)
+    - components/Navbar.tsx  o  components/Header.tsx
+
+  Para ocultarlo SOLO en la landing, tienes dos opciones:
+
+  OPCIÓN A (recomendada): En tu componente Navbar, añade una prop
+  como `hideLogo?: boolean` y pásala desde la landing o detecta la
+  ruta con usePathname():
+
+    import { usePathname } from 'next/navigation';
+    const pathname = usePathname();
+    const isLanding = pathname === '/';
+    // luego: {!isLanding && <Logo />}
+
+  OPCIÓN B (rápida): Añade una clase CSS en el layout de la landing
+  y úsala para ocultar el logo del navbar:
+
+    // En layout.tsx, en el <body> de la landing agrega data-page="landing"
+    // Luego en globals.css:
+    [data-page="landing"] .navbar-logo { display: none; }
+
+  ================================================================
+*/

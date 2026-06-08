@@ -8,26 +8,46 @@
    aquí como variables CSS. Ningún componente hardcodea colores.
    ============================================================ */
 
-/* --- Fuentes ---
-   Futura Std es comercial; los .woff2 los provee el cliente.
-   Mientras tanto se usa una pila geométrica (Jost ~ Futura) con
-   fallback de sistema. Cuando lleguen los archivos, descomentar
-   los @font-face y mantener los mismos nombres de variable. */
+/* --- Fuentes (auto-hospedadas) ---
+   Tres familias servidas desde /public/fonts (woff2). El navegador
+   sólo descarga los pesos que realmente usa.
+     · Futura PT   → títulos y slogan        (--font-display, --font-heavy)
+     · Raleway     → cuerpo de texto         (--font-body)
+     · Open Sans   → etiquetas y secundaria  (--font-accent)
+   Futura PT y Raleway no traen archivo itálico: las cursivas se
+   sintetizan (oblicua). Open Sans sí incluye itálicas reales. */
 
-/*
-@font-face {
-  font-family: "Futura Std";
-  src: url("/fonts/FuturaStd-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Futura Std";
-  src: url("/fonts/FuturaStd-Heavy.woff2") format("woff2");
-  font-weight: 800;
-  font-display: swap;
-}
-*/
+/* Futura PT */
+@font-face { font-family: "Futura PT"; src: url("/fonts/futura-pt/FuturaPT-Light.woff2") format("woff2");     font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Futura PT"; src: url("/fonts/futura-pt/FuturaPT-Book.woff2") format("woff2");      font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Futura PT"; src: url("/fonts/futura-pt/FuturaPT-Medium.woff2") format("woff2");    font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Futura PT"; src: url("/fonts/futura-pt/FuturaPT-Demi.woff2") format("woff2");      font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Futura PT"; src: url("/fonts/futura-pt/FuturaPT-Bold.woff2") format("woff2");      font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Futura PT"; src: url("/fonts/futura-pt/FuturaPT-ExtraBold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Futura PT"; src: url("/fonts/futura-pt/FuturaPT-Heavy.woff2") format("woff2");     font-weight: 900; font-style: normal; font-display: swap; }
+
+/* Raleway */
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-Thin.woff2") format("woff2");       font-weight: 100; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-ExtraLight.woff2") format("woff2"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-Light.woff2") format("woff2");      font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-Regular.woff2") format("woff2");    font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-Medium.woff2") format("woff2");     font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-SemiBold.woff2") format("woff2");   font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-Bold.woff2") format("woff2");       font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-ExtraBold.woff2") format("woff2");  font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Raleway"; src: url("/fonts/raleway/Raleway-Heavy.woff2") format("woff2");      font-weight: 900; font-style: normal; font-display: swap; }
+
+/* Open Sans */
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-Light.woff2") format("woff2");          font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-LightItalic.woff2") format("woff2");    font-weight: 300; font-style: italic; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-Regular.woff2") format("woff2");        font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-Italic.woff2") format("woff2");         font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-SemiBold.woff2") format("woff2");       font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-SemiBoldItalic.woff2") format("woff2"); font-weight: 600; font-style: italic; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-Bold.woff2") format("woff2");           font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-BoldItalic.woff2") format("woff2");     font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-ExtraBold.woff2") format("woff2");      font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Open Sans"; src: url("/fonts/open-sans/OpenSans-ExtraBoldItalic.woff2") format("woff2");font-weight: 800; font-style: italic; font-display: swap; }
 
 :root {
   /* Paleta de marca (ver kiori_spec.md §3) */
@@ -43,9 +63,10 @@
   --color-ink: #1a1a1a;         /* Negro / texto */
 
   /* Tipografía */
-  --font-display: "Futura Std", "Jost", "Century Gothic", "Avenir Next", system-ui, sans-serif;
-  --font-heavy: "Futura Std", "Jost", "Century Gothic", "Avenir Next", system-ui, sans-serif;
-  --font-body: "Jost", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+  --font-display: "Futura PT", "Century Gothic", "Avenir Next", system-ui, sans-serif;  /* Títulos */
+  --font-heavy: "Futura PT", "Century Gothic", "Avenir Next", system-ui, sans-serif;    /* Slogan / énfasis */
+  --font-body: "Raleway", "Helvetica Neue", Arial, system-ui, sans-serif;               /* Cuerpo de texto */
+  --font-accent: "Open Sans", "Helvetica Neue", Arial, system-ui, sans-serif;           /* Etiquetas / secundaria */
 
   /* Espaciado y layout */
   --site-max: 1280px;
@@ -159,7 +180,7 @@ img {
 
 /* Texto de etiqueta pequeño y espaciado */
 .eyebrow {
-  font-family: var(--font-display);
+  font-family: var(--font-accent);
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 0.72rem;
@@ -230,7 +251,7 @@ img {
 /* Campos de formulario */
 .field-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
 .field-group label {
-  font-family: var(--font-display);
+  font-family: var(--font-accent);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.72rem;
