@@ -1,0 +1,299 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   KIORI — Hoja de estilos global única.
+   Toda la paleta, tipografía, espaciado y breakpoints viven
+   aquí como variables CSS. Ningún componente hardcodea colores.
+   ============================================================ */
+
+/* --- Fuentes ---
+   Futura Std es comercial; los .woff2 los provee el cliente.
+   Mientras tanto se usa una pila geométrica (Jost ~ Futura) con
+   fallback de sistema. Cuando lleguen los archivos, descomentar
+   los @font-face y mantener los mismos nombres de variable. */
+
+/*
+@font-face {
+  font-family: "Futura Std";
+  src: url("/fonts/FuturaStd-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Futura Std";
+  src: url("/fonts/FuturaStd-Heavy.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
+*/
+
+:root {
+  /* Paleta de marca (ver kiori_spec.md §3) */
+  --color-sage: #3f5b5a;        /* Verde salvia */
+  --color-rose: #d8b1ab;        /* Rosa palo */
+  --color-rose-soft: #e5b3ac;   /* Rosa palo claro (cajas) */
+  --color-blush: #ede6e9;       /* Blanco rosado */
+  --color-nude: #b6907e;        /* Nude arena */
+  --color-nude-deep: #bb7860;   /* Nude profundo (botones / pills) */
+  --color-accent: #c3917e;      /* Acento itálico (slogan "INSPIRA") */
+  --color-gray: #c8c8c8;        /* Gris pálido */
+  --color-white: #ffffff;       /* Blanco puro */
+  --color-ink: #1a1a1a;         /* Negro / texto */
+
+  /* Tipografía */
+  --font-display: "Futura Std", "Jost", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+  --font-heavy: "Futura Std", "Jost", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+  --font-body: "Jost", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+
+  /* Espaciado y layout */
+  --site-max: 1280px;
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+
+  /* Breakpoint principal */
+  --bp-mobile: 768px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Nota: NO usar scroll-behavior: smooth aquí — interfiere con el scrub
+   de las animaciones pinned de GSAP en el landing. */
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-blush);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ---------- Utilidades reutilizables ---------- */
+
+.kiori-container {
+  width: 100%;
+  max-width: var(--site-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Botón pill — variante nude (CTA principal) */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+.btn-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -10px rgba(26, 26, 26, 0.45);
+}
+.btn-nude {
+  background-color: var(--color-nude-deep);
+  color: var(--color-white);
+}
+.btn-rose {
+  background-color: var(--color-rose);
+  color: var(--color-sage);
+}
+.btn-sage {
+  background-color: var(--color-sage);
+  color: var(--color-white);
+}
+.btn-light {
+  background-color: var(--color-white);
+  color: var(--color-sage);
+}
+.btn-outline {
+  background-color: transparent;
+  border: 1.5px solid var(--color-sage);
+  color: var(--color-sage);
+}
+
+/* Títulos con acento itálico (slogan) */
+.italic-accent {
+  font-family: var(--font-heavy);
+  font-style: italic;
+  color: var(--color-accent);
+  font-weight: 800;
+}
+
+/* Texto de etiqueta pequeño y espaciado */
+.eyebrow {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  color: var(--color-sage);
+}
+
+/* Imagen placeholder (cielo + colinas) reproducida del diseño */
+.placeholder-card {
+  background-image: url("/landing/placeholder-green.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+/* ---------- Animaciones base (no-scroll) ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.8s ease both;
+}
+
+/* Respeta usuarios que reducen movimiento */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .fade-up { animation: none; }
+}
+
+/* Scrollbar sutil */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-thumb { background: var(--color-rose); border-radius: 999px; }
+::-webkit-scrollbar-track { background: var(--color-blush); }
+
+/* ---------- Layout de páginas internas ---------- */
+/* Compensan el navbar fijo (76px). */
+.page {
+  min-height: 100vh;
+  padding-top: 76px;
+  background: var(--color-blush);
+}
+.page-banner {
+  background: var(--color-sage);
+  color: var(--color-blush);
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(2rem, 5vw, 3.5rem);
+}
+.page-banner h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  color: var(--color-white);
+  letter-spacing: 0.04em;
+}
+.page-banner .italic-accent { font-size: inherit; }
+.page-banner p {
+  margin-top: 0.75rem;
+  opacity: 0.88;
+  max-width: 36rem;
+  line-height: 1.7;
+}
+.section-pad { padding-block: clamp(2.5rem, 6vw, 4.5rem); }
+
+/* Tarjeta genérica */
+.card {
+  background: var(--color-white);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px -22px rgba(26, 26, 26, 0.4);
+  overflow: hidden;
+}
+
+/* Campos de formulario */
+.field-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
+.field-group label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--color-nude);
+}
+.field-group input,
+.field-group select,
+.field-group textarea {
+  border: 1.5px solid rgba(63, 91, 90, 0.45);
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus { border-color: var(--color-sage); }
+
+/* Aviso / nota */
+.notice {
+  background: var(--color-rose);
+  color: var(--color-sage);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.notice strong { font-weight: 700; }
+
+/* Chips de filtro */
+.chip {
+  border: 1.5px solid var(--color-sage);
+  color: var(--color-sage);
+  background: transparent;
+  border-radius: var(--radius-pill);
+  padding: 0.45rem 1.1rem;
+  font-size: 0.8rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  transition: all 0.2s ease;
+}
+.chip:hover { background: rgba(63, 91, 90, 0.08); }
+.chip.active { background: var(--color-sage); color: var(--color-white); }
+
+.muted { color: var(--color-ink); opacity: 0.7; }
+
+/* ---------- Admin compartido ---------- */
+.admin-h1 { color: var(--color-sage); font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 1.5rem; }
+.admin-h2 { color: var(--color-sage); font-size: 1.2rem; margin: 0 0 1rem; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 2.5rem; }
+.stat { background: var(--color-white); border-radius: 16px; padding: 1.4rem; box-shadow: 0 12px 36px -24px rgba(26,26,26,.4); }
+.stat .n { font-size: 2.2rem; font-weight: 700; color: var(--color-sage); font-family: var(--font-display); }
+.stat .l { color: var(--color-nude); font-size: .82rem; text-transform: uppercase; letter-spacing: .1em; }
+.adm-table { width: 100%; border-collapse: collapse; background: var(--color-white); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 36px -24px rgba(26,26,26,.4); }
+.adm-table th { text-align: left; background: rgba(63,91,90,.08); color: var(--color-sage); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; padding: .9rem 1rem; }
+.adm-table td { padding: .85rem 1rem; border-top: 1px solid rgba(63,91,90,.1); color: var(--color-ink); font-size: .9rem; }
+.adm-badge { border-radius: 999px; padding: .2rem .7rem; font-size: .7rem; font-weight: 700; background: var(--color-rose); color: var(--color-sage); }
+.adm-badge.green { background: var(--color-sage); color: #fff; }
+.adm-badge.nude { background: var(--color-nude-deep); color: #fff; }
+.adm-btn { border: 1.5px solid var(--color-sage); background: none; color: var(--color-sage); border-radius: 999px; padding: .35rem .9rem; font-size: .75rem; cursor: pointer; margin-right: .35rem; }
+.adm-btn:hover { background: rgba(63,91,90,.08); }
+.adm-btn.solid { background: var(--color-sage); color: #fff; }
