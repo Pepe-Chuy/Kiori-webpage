@@ -99,6 +99,13 @@ function HeroContent() {
    Los demás componentes de contenido no cambian
    ---------------------------------------------------------------- */
 
+/* ----------------------------------------------------------------
+   COMPONENTE: Section2Content
+   CAMBIOS vs v2:
+   - Imágenes: de 2 absolute superpuestas → 3 flex-column apiladas
+   - Orden imágenes (top → bottom): medit-2, mission-picnic, medit-studio
+   - Botón: btn-rose → btn-hero-cta para mantener consistencia de estilo
+   ---------------------------------------------------------------- */
 function Section2Content() {
   return (
     <div className="s2-grid">
@@ -107,30 +114,67 @@ function Section2Content() {
           {TXT.s2Title1} <span className="italic-accent">{TXT.s2Title2}</span>
         </h2>
         <p className="s2-paragraph">{TXT.s2Paragraph}</p>
-        <Link href="/suscripcion" className="btn-pill btn-rose">{TXT.s2Cta}</Link>
+
+        {/*
+          Botón actualizado a btn-hero-cta para que haga match con
+          el estilo rosa/texto negro/Raleway del botón del hero.
+        */}
+        <Link href="/suscripcion" className="btn-pill btn-hero-cta">{TXT.s2Cta}</Link>
       </div>
+
+      {/*
+        CAMBIO ESTRUCTURAL:
+        Antes: 2 divs con position absolute (s2-img-a encima, s2-img-b debajo)
+               en un contenedor de altura fija (30rem).
+        Ahora: 3 divs en flex-column, cada uno con su propio espacio natural.
+               Las clases s2-img-a y s2-img-b se eliminaron del CSS.
+
+        Orden según el diseño target (de arriba hacia abajo):
+        1. medit-2.jpg        → interior, primera imagen arriba
+        2. mission-picnic.jpg → exterior, imagen del medio
+        3. medit-studio.jpg   → estudio, imagen de abajo
+      */}
       <div className="s2-images">
-        <div className="s2-img s2-img-a"><img src="/landing/medit-studio.jpg" alt="Mujer meditando" /></div>
-        <div className="s2-img s2-img-b"><img src="/landing/medit-2.jpg" alt="Práctica de bienestar" /></div>
+        <div className="s2-img">
+          <img src="/landing/medit-2.jpg" alt="Meditación interior" />
+        </div>
+        <div className="s2-img">
+          <img src="/landing/mission-picnic.jpg" alt="Bienestar al aire libre" />
+        </div>
+        <div className="s2-img">
+          <img src="/landing/medit-studio.jpg" alt="Práctica en estudio" />
+        </div>
       </div>
     </div>
   );
 }
 
 function MissionBox() {
+  /*
+    Se mantienen 4 <p> separados porque el GSAP stagger anima cada
+    .mission-line con un delay escalonado (cada línea aparece levemente
+    después de la anterior). Si fuera un solo <p> no habría efecto.
+
+    Negritas añadidas vs versión anterior:
+      + KIORI
+      + experiencias, productos  (antes era junto a herramientas)
+      + herramientas             (ahora separado)
+      + comunidad
+      + constante evolución.     (se quitó "en" antes de "constante")
+  */
   return (
     <div className="mission-box">
       <p className="mission-line">
-        Nuestra <b>misión y visión</b> en KIORI es inspirar y acompañar a las personas a
+        Nuestra <b>misión y visión</b> en <b>KIORI</b> es inspirar y acompañar a las personas a
       </p>
       <p className="mission-line">
-        través de <b>experiencias, productos y herramientas</b> de energía consciente,
+        través de <b>experiencias, productos</b> y <b>herramientas</b> de energía consciente,
       </p>
       <p className="mission-line">
-        creando una comunidad cercana que transforme el wellness en un estilo de
+        creando una <b>comunidad</b> cercana que transforme el wellness en un estilo de
       </p>
       <p className="mission-line">
-        vida <b>auténtico, inspirador</b> y en constante evolución.
+        vida <b>auténtico, inspirador</b> y <b>constante evolución.</b>
       </p>
     </div>
   );
@@ -194,7 +238,14 @@ export default function Landing() {
       gsap.set(".card-left", { xPercent: -65, opacity: 0 });
       gsap.set(".card-center", { yPercent: 65, opacity: 0 });
       gsap.set(".card-right", { xPercent: 65, opacity: 0 });
-      gsap.set(".card-img", { opacity: 0 });
+      /*
+        FIX v9: se eliminó `gsap.set(".card-img", { opacity: 0 })`.
+        Ese set ocultaba las fotos circulares y solo las revelaba al 85%
+        del scroll del stage. Si el usuario no scrolleaba hasta el final,
+        las imágenes nunca aparecían. Las cards ya tienen su propia
+        animación de entrada (xPercent/yPercent), no hace falta animar
+        además la opacidad de la foto interior.
+      */
 
       // ---- Fase A: Hero → Sección 2 ----
       // El botón (.hero-cta-bottom) está dentro de .layer-hero,
@@ -217,8 +268,8 @@ export default function Landing() {
         .to(".layer-s4", { opacity: 1, duration: 0.4 }, 2.75)
         .to(".card-left", { xPercent: 0, opacity: 1, duration: 1 }, 2.85)
         .to(".card-center", { yPercent: 0, opacity: 1, duration: 1 }, 2.85)
-        .to(".card-right", { xPercent: 0, opacity: 1, duration: 1 }, 2.85)
-        .to(".card-img", { opacity: 1, stagger: 0.12, duration: 0.6 }, 3.4);
+        .to(".card-right", { xPercent: 0, opacity: 1, duration: 1 }, 2.85);
+        /* (eliminada la animación de opacity de .card-img — ver comentario arriba) */
     }, stageRef);
 
     // ---------- MÓVIL: fade-in simple al entrar en viewport ----------
@@ -474,7 +525,39 @@ function LandingStyles() {
       .layer-picnic {
         z-index: 4;
         background: url("/landing/mission-picnic.jpg") center/cover no-repeat;
-        display: flex; align-items: center;
+        display: flex;
+        /*
+          CAMBIO: center → flex-end
+          flex-end empuja el kiori-container al borde inferior del layer.
+          Resultado: el mission-box "toca" el borde inferior de la sección.
+        */
+        align-items: flex-end;
+      }
+
+      /*
+        Override puntual: el kiori-container normalmente puede tener
+        padding-bottom. Lo anulamos SOLO dentro del layer-picnic para
+        que el mission-box quede exactamente al ras del borde inferior.
+      */
+      .layer-picnic .kiori-container {
+        padding-bottom: 0;
+
+        /*
+          ── AJUSTE MANUAL DE POSICIÓN HORIZONTAL ──────────────────────────
+          Este padding-left es el único valor que necesitas cambiar para
+          mover el box a izquierda o derecha.
+
+          Referencia de valores:
+            0rem       → box pegado al borde izquierdo de la pantalla
+            1rem       → ligeramente separado del borde
+            2rem       → más hacia la derecha (valor actual)
+            3rem–4rem  → posición del gutter estándar del sitio
+
+          Reduce el número para moverlo a la izquierda,
+          auméntalo para moverlo a la derecha.
+          ──────────────────────────────────────────────────────────────────
+        */
+        padding-left: 2rem;
       }
       .layer-s4 { z-index: 6; display: flex; align-items: center; background: var(--color-blush); }
 
@@ -626,9 +709,20 @@ function LandingStyles() {
 
       /* ====== SECCIÓN 2 ====== */
       .s2-scene { width: 100%; }
+
+      /*
+        CAMBIO: grid-template-columns pasa de 1.1fr 1fr a 1.3fr 1fr.
+        Esto le da más espacio al texto (57%) y menos a las imágenes (43%),
+        que es la proporción que se ve en el diseño target.
+
+        align-items: start (antes: center) → texto e imágenes alinean
+        desde el top, igual que en el target.
+      */
       .s2-grid {
-        display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(2rem, 5vw, 5rem);
-        align-items: center;
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: clamp(2rem, 4vw, 4rem);
+        align-items: start;
       }
       .s2-title {
         font-size: clamp(1.8rem, 3.4vw, 3rem); line-height: 1.08;
@@ -639,17 +733,96 @@ function LandingStyles() {
         color: var(--color-ink); opacity: .85; max-width: 30rem; line-height: 1.8;
         margin-bottom: 2rem; font-size: clamp(.95rem, 1.2vw, 1.05rem);
       }
-      .s2-images { position: relative; height: 30rem; }
-      .s2-img { position: absolute; border-radius: 20px; overflow: hidden;
-        box-shadow: 0 20px 50px -20px rgba(26,26,26,.4); }
-      .s2-img img { width: 100%; height: 100%; object-fit: cover; }
-      .s2-img-a { width: 62%; height: 70%; top: 0; right: 6%; z-index: 2; }
-      .s2-img-b { width: 56%; height: 60%; bottom: 0; left: 0; z-index: 1; }
+
+      /*
+        CAMBIO COMPLETO en el layout de imágenes:
+
+        ANTES (v1-v2): un contenedor de altura fija (30rem) con 2 hijos
+          position:absolute escalonados. Problema: depende de height fija
+          y las imágenes se superponen manualmente.
+
+        AHORA (v3): flex-column con gap uniforme entre las 3 imágenes.
+          Cada imagen tiene aspect-ratio: 4/3 para mantener proporciones
+          consistentes sin importar el ancho de la columna.
+
+        Las clases s2-img-a y s2-img-b se eliminan — ya no se usan.
+
+        PROBLEMA que se corrige en v4:
+        aspect-ratio: 4/3 hacía que cada imagen fuera tan alta como ancha × 0.75.
+        Si la columna mide ~520px → cada imagen ~390px → 3 fotos = 1170px. Desborda 100vh.
+
+        SOLUCIÓN v4:
+        El contenedor (.s2-images) recibe una altura calculada del viewport.
+        Cada hijo (.s2-img) usa flex: 1 para repartirse esa altura en 3 partes iguales.
+        La imagen usa height: 100% para llenar su contenedor y object-fit: cover para recortar.
+      */
+      .s2-images {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(.4rem, .55vw, .6rem);
+        /*
+          76vh ≈ espacio útil de la sección después de navbar y padding.
+          clamp: mínimo 22rem, ideal 76vh, máximo 38rem para pantallas grandes.
+        */
+        height: clamp(22rem, 76vh, 38rem);
+      }
+
+      .s2-img {
+        /*
+          flex: 1 → cada .s2-img toma exactamente 1/3 del alto de .s2-images.
+          min-height: 0 → CRÍTICO. Sin esto un flex item no puede encogerse por
+          debajo del tamaño natural de su contenido (la imagen sin recortar).
+          Con min-height: 0, overflow: hidden puede cortar correctamente.
+        */
+        flex: 1;
+        min-height: 0;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 6px 20px -4px rgba(26,26,26,.2);
+      }
+
+      .s2-img img {
+        width: 100%;
+        height: 100%;     /* llena el flex item completo */
+        object-fit: cover;
+        display: block;   /* elimina el gap inline que los <img> generan por defecto */
+      }
+
+      /*
+        object-position controla QUÉ parte de la imagen queda visible cuando
+        object-fit: cover recorta para rellenar el contenedor.
+
+        El valor acepta palabras clave (top, center, bottom) o porcentajes X% Y%:
+          X% = posición horizontal (0=izquierda, 50=centro, 100=derecha)
+          Y% = posición vertical   (0=arriba de la imagen, 100=abajo)
+
+        CORRECCIÓN v5:
+        Con "bottom", el ancla se pone en la parte inferior de la imagen y
+        se recorta desde arriba. Para la foto del picnic y medit-studio,
+        el sujeto principal está en el tercio superior/central del original,
+        así que "bottom" mostraba demasiado suelo/pasto.
+
+        Ajuste: 50% 30% y 50% 25% mueven el punto de anclaje hacia arriba,
+        centrando el encuadre sobre la persona en lugar del suelo.
+
+        Si sigue sin quedar perfecto, puedes afinar el segundo número:
+          más alto (ej. 50% 10%) → sube más el encuadre, ves la parte superior
+          más bajo  (ej. 50% 60%) → baja, ves más la parte inferior
+      */
+      .s2-img:nth-child(1) img { object-position: center; }        /* medit-2: partes iguales       */
+      .s2-img:nth-child(2) img { object-position: 50% 65%; }       /* mission-picnic: sube el crop  */
+      .s2-img:nth-child(3) img { object-position: 50% 55%; }       /* medit-studio: muestra persona */
 
       /* ====== SECCIÓN 3 — Misión ====== */
       .mission-inner { width: 100%; }
       .mission-box {
-        background: rgba(216,177,171,.86);
+        /*
+          Color más saturado e intenso vs la versión anterior (216,177,171,.86).
+          Se bajan G y B para darle más cuerpo al rosa/mauve y se sube
+          la opacidad a .94 para que el texto sea más legible sobre la foto.
+          Resultado: rosa cálido más cercano al target.
+        */
+        background: rgba(210,148,141,.94);
         border-radius: var(--radius-lg);
         padding: clamp(1.8rem, 3vw, 3rem);
         max-width: 40rem;
@@ -657,40 +830,176 @@ function LandingStyles() {
       }
       .mission-line {
         font-style: italic; color: var(--color-sage);
-        font-size: clamp(1rem, 1.5vw, 1.35rem); line-height: 1.7; margin: 0;
+        /*
+          Tamaño aumentado: de clamp(1rem, 1.5vw, 1.35rem)
+                          a clamp(1.1rem, 1.7vw, 1.5rem)
+          El mínimo sube de 1rem a 1.1rem (pantallas pequeñas)
+          El ideal sube de 1.5vw a 1.7vw (pantallas medias)
+          El máximo sube de 1.35rem a 1.5rem (pantallas grandes)
+        */
+        font-size: clamp(1.1rem, 1.7vw, 1.5rem);
+        line-height: 1.65;
+        margin: 0;
+        text-align: justify;
       }
       .mission-line b { font-weight: 700; font-style: italic; }
 
       /* ====== SECCIÓN 4 — Servicios ====== */
+      /*
+        Reescritura completa basada en el SVG target.
+        Datos extraídos del SVG (clipPath de cada card):
+          ancho: 240, alto: 353, ratio ≈ 0.68 (rectángulo vertical alargado)
+          border-radius: 27px (≈11% del ancho)
+      */
       .svc-wrap { width: 100%; text-align: center; }
-      .svc-head { margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+      .svc-head { margin-bottom: clamp(2rem, 4vw, 3rem); }
+
+      /* ── TÍTULO ────────────────────────────────────────────── */
+      /*
+        CAMBIOS:
+        - color: nude/terracotta (--color-accent) → sage (--color-sage)
+          En el target "SERVICIOS" es del mismo verde-sage que el resto del sitio.
+        - font-size: subido para que tenga más peso visual.
+        - letter-spacing: bajado un toque (.28em → .22em) — el target
+          tiene tracking ancho pero no tan extremo.
+      */
       .svc-title {
-        font-size: clamp(2.2rem, 5vw, 4rem); letter-spacing: .28em;
-        color: var(--color-accent); font-weight: 700; padding-left: .28em;
+        font-size: clamp(2.6rem, 5.5vw, 4.5rem);
+        letter-spacing: .22em;
+        color: var(--color-sage);
+        font-weight: 700;
+        padding-left: .22em;
+        margin: 0;
       }
+
+      /* ── SUBTÍTULO ─────────────────────────────────────────── */
+      /*
+        El subtítulo del target rompe a 2 líneas:
+        "OPCIONES CREADAS PARA ACOMPAÑARTE / EN TU CAMINO DE BIENESTAR"
+        Le doy un max-width para forzar ese wrap naturalmente.
+      */
       .svc-subtitle {
-        text-transform: uppercase; letter-spacing: .15em; color: var(--color-sage);
-        font-size: clamp(.65rem, 1vw, .82rem); margin-top: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .12em;
+        color: var(--color-sage);
+        font-size: clamp(.75rem, 1.05vw, .9rem);
+        margin: .9rem auto 0;
+        max-width: 28rem;
+        line-height: 1.6;
       }
+
+      /* ── GRID DE CARDS ─────────────────────────────────────── */
+      /*
+        CAMBIO v10:
+        - gap subido para más separación visual entre cards
+          (1rem-2rem) → (1.8rem-3.5rem)
+        - max-width subido (56rem → 64rem) → el bloque ocupa más espacio horizontal
+      */
       .svc-cards {
-        display: grid; grid-template-columns: repeat(3, 1fr);
-        gap: clamp(1rem, 2.5vw, 2.2rem); max-width: 60rem; margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: clamp(1.8rem, 3.5vw, 3.5rem);
+        max-width: 64rem;
+        margin: 0 auto;
       }
+
+      /* ── CARD INDIVIDUAL ───────────────────────────────────── */
+      /*
+        CAMBIOS clave:
+        - aspect-ratio: 0.68 (calcado del SVG) → cards rectangulares verticales
+        - box-shadow más pronunciada (offset 16px, blur 36px) → da volumen
+        - justify-content: space-between → la foto sube al top, el botón baja al bottom
+        - gap eliminado: el espacio entre foto y botón viene de space-between
+
+        CAMBIO v10/v11:
+        - border: 3px solid #d99c93 → marco rojo pastel pedido por el usuario.
+          v10 era 2px #e4b1aa, demasiado parecido al --color-rose y se
+          confundía con el fondo. v11 sube a 3px y usa un tono levemente
+          más saturado (#d99c93) para que sea inconfundible.
+          Si después de verlo quieres que sea más sutil, baja a 2px y/o
+          ajusta el hex hacia tonos más claros (ej. #e4b1aa o #e8b8b0).
+      */
       .svc-card {
-        background: var(--color-rose); border-radius: 22px;
-        padding: 1.6rem 1.2rem 1.8rem; display: flex; flex-direction: column;
-        align-items: center; gap: 1.4rem; transition: transform .3s ease;
+        background: var(--color-rose);
+        border: 3px solid #d99c93; /* marco rojo pastel saturado */
+        border-radius: 24px;
+        padding: 1.6rem 1.2rem 1.8rem;
+        aspect-ratio: 0.68; /* del SVG: 240/353 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between; /* foto arriba, botón abajo */
+        /* Sombra más fuerte y oscura para dar profundidad a la card */
+        box-shadow: 0 18px 40px -12px rgba(0,0,0,0.28),
+                    0 6px 16px -6px rgba(0,0,0,0.15);
+        transition: transform .3s ease, box-shadow .3s ease;
+        text-decoration: none;
       }
-      .svc-card:hover { transform: translateY(-6px); }
+      .svc-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 24px 50px -12px rgba(0,0,0,0.32),
+                    0 8px 20px -6px rgba(0,0,0,0.18);
+      }
+
+      /* ── FOTO CIRCULAR ─────────────────────────────────────── */
+      /*
+        v11: Anulación FORZADA de sombras/filtros sobre el círculo y su imagen.
+        Si la "medialuna" persiste después de esto, no viene del CSS —
+        probablemente está horneada en el archivo PNG (sombra exportada
+        desde el diseño original). En ese caso habría que re-exportar
+        el PNG sin la sombra.
+
+        Uso de !important: forzamos sobreescritura de cualquier otra regla
+        (heredada, de Tailwind, de un wrapper, o de versión cacheada).
+      */
       .svc-photo {
-        width: 80%; aspect-ratio: 1; border-radius: 50%; overflow: hidden;
-        margin-top: -2.6rem; background: var(--color-rose);
+        width: 88%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--color-rose);
+        margin-top: .5rem;
+        box-shadow: none !important;
+        filter: none !important;
+        outline: none !important;
       }
-      .svc-photo .card-img { width: 100%; height: 100%; object-fit: cover; }
+      .svc-photo .card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        box-shadow: none !important;
+        filter: none !important;
+      }
+      .svc-photo .card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* ── BOTÓN (LABEL) ─────────────────────────────────────── */
+      /*
+        CAMBIOS pedidos:
+        - "Letras delgadas" → font-family Raleway, font-weight 300 (thin)
+        - "Óvalos más alargados" → más padding horizontal (1.4rem → 2.2rem)
+        - Mantener color nude/terracotta con texto blanco
+        - Letter-spacing ligeramente reducido para look más limpio
+      */
       .svc-label {
-        background: var(--color-nude-deep); color: #fff; border-radius: var(--radius-pill);
-        padding: .7rem 1.4rem; font-family: var(--font-display); font-weight: 700;
-        letter-spacing: .12em; font-size: clamp(.6rem, .85vw, .72rem); line-height: 1.4;
+        background: var(--color-nude-deep);
+        color: #fff;
+        border-radius: 999px; /* full pill */
+        padding: .85rem 2.2rem;
+        font-family: 'Raleway', var(--font-display), sans-serif;
+        font-weight: 300; /* delgada, no bold */
+        letter-spacing: .08em;
+        font-size: clamp(.7rem, .9vw, .8rem);
+        line-height: 1.4;
+        text-align: center;
+        text-transform: uppercase;
+        margin-bottom: .4rem;
+        white-space: nowrap;
       }
 
       /* ====== SECCIÓN 5 — Catálogo ====== */
@@ -763,8 +1072,20 @@ function LandingStyles() {
       .m-s4 { background: var(--color-blush); }
       @media (max-width: 768px) {
         .s2-grid { grid-template-columns: 1fr; }
-        .s2-images { height: 22rem; margin-top: 2rem; }
+        /*
+          En móvil no hay pin de GSAP → las imágenes pueden tener altura natural.
+          Reseteamos height: auto y flex: none para que cada imagen use su propia altura.
+        */
+        .s2-images { height: auto; gap: .4rem; }
+        .s2-img { flex: none; }
+        .s2-img img { height: clamp(8rem, 38vw, 14rem); }
+        /*
+          En móvil 1 sola columna. Anulo el aspect-ratio porque a ancho completo
+          (~22rem) la card resultaría exageradamente alta. En su lugar uso
+          min-height para mantener proporción razonable.
+        */
         .svc-cards { grid-template-columns: 1fr; max-width: 22rem; }
+        .svc-card { aspect-ratio: auto; min-height: 22rem; }
         .catalog-cols { grid-template-columns: 1fr; gap: 1.5rem; }
         .catalog-col + .catalog-col { border-left: none; border-top: 1px solid rgba(63,91,90,.25); padding-top: 1.5rem; }
         .collection-grid { grid-template-columns: 1fr; }
