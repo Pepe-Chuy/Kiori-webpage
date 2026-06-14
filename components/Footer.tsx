@@ -31,7 +31,7 @@ export default function Footer() {
       <div className="kiori-container" style={{ display: "grid", gap: "2.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", paddingBottom: "2.5rem" }}>
         <div>
           {/* Logo en blanco sobre el verde salvia */}
-          <img src="/landing/logo-white.png" alt="Kiori" style={{ height: 54, width: "auto", marginBottom: ".75rem" }} />
+          <img src="/landing/logo-kiori-white.png" alt="Kiori" style={{ height: 64, width: "auto", marginBottom: ".75rem" }} />
           <p style={{ fontSize: ".85rem", opacity: 0.85, maxWidth: 220 }}>
             Bienestar, energía y rituales conscientes en un solo sitio.
           </p>
