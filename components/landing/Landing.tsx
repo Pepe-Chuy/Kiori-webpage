@@ -766,7 +766,7 @@ function LandingStyles() {
           ~50vh) y el borde inferior de la pantalla. ~22vh desde abajo
           ≈ punto medio de esa franja.
         */
-        bottom: clamp(7rem, 22vh, 15rem);
+        bottom: clamp(3.5rem, 11vh, 7.5rem);
         left: 50%;
         transform: translateX(-50%);
         white-space: nowrap;
@@ -1024,7 +1024,10 @@ function LandingStyles() {
         width: 88%;
         aspect-ratio: 1;
         border-radius: 50%;
-        overflow: hidden;
+        /* overflow visible: las PNGs ya tienen el recorte circular horneado con
+           fondo transparente, así que pelo, cabeza y estrellas que sobresalen
+           del círculo se ven fuera de él en lugar de ser cortados */
+        overflow: visible;
         background: var(--color-rose);
         margin-top: .5rem;
         box-shadow: none !important;
@@ -1038,12 +1041,7 @@ function LandingStyles() {
         display: block;
         box-shadow: none !important;
         filter: none !important;
-      }
-      .svc-photo .card-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
+        transform: scale(1.18);  /* zoom suave, recortado por el overflow:hidden del círculo */
       }
 
       /* ── BOTÓN (LABEL) ─────────────────────────────────────── */
