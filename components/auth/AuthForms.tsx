@@ -13,7 +13,7 @@ function AuthShell({ title, accent, children, footer }: { title: string; accent:
     <div className="page" style={{ display: "flex" }}>
       <div className="auth-wrap">
         <div className="auth-visual">
-          <img src="/landing/logo-white.png" alt="Kiori" className="auth-logo" />
+          <img src="/landing/logo-kiori-white.png" alt="Kiori" className="auth-logo" />
           <p className="auth-tag">Energía que inspira</p>
         </div>
         <div className="auth-form-side">

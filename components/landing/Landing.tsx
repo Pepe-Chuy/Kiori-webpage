@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { MOCK_PRODUCTS } from "@/lib/mock/products";
 
 /* ============================================================
    LANDING DE KIORI — v2
@@ -72,7 +73,7 @@ function HeroContent() {
       */}
       <div className="hero-brand">
         <img
-          src="/landing/logo-teal.png"
+          src="/landing/logo-kiori.png"
           alt="Kiori"
           className="hero-brand-img"
         />
@@ -219,10 +220,48 @@ export default function Landing() {
         scrollTrigger: {
           trigger: stageRef.current,
           start: "top top",
-          end: "+=3800",
+          end: "+=5000",
           scrub: 1,
           pin: true,
           anticipatePin: 1,
+          /*
+            SNAP AUTOMÁTICO ENTRE ESCENAS
+            ------------------------------------------------------------
+            Sin esto el usuario podía soltar el scroll a la mitad de una
+            transición y la escena quedaba "atorada" entre dos slides.
+
+            snapTo es la lista de progresos (0..1 del timeline) donde cada
+            escena queda totalmente asentada. Derivados de los tiempos del
+            timeline (duración total ≈ 3.85):
+              0      → Hero
+              0.34   → Sección 2  (t≈1.3 / 3.85)
+              0.65   → Misión     (t≈2.5 / 3.85)
+              1      → Servicios  (t=3.85)
+
+            Al detenerse el scroll, GSAP anima suavemente hasta el punto
+            más cercano, así nunca queda a medio camino. duration min/max
+            mantiene el ajuste rápido pero no brusco.
+          */
+          snap: {
+            /*
+              Puntos recalculados con la nueva duración total ~4.95:
+                0    → Hero (t=0)
+                0.32 → S2 asentada (t≈1.6 / 4.95)
+                0.70 → Misión asentada, texto completo (t≈3.45 / 4.95)
+                1    → Servicios (t=4.95)
+            */
+            snapTo: [0, 0.32, 0.70, 1],
+            /*
+              directional: true → siempre avanza al SIGUIENTE punto en la
+              dirección del scroll (no al más cercano). Un solo tick de
+              rueda lleva a la escena siguiente; varias ruedas lentas
+              animan gradualmente y al soltarlas aterrizan en la próxima.
+            */
+            directional: true,
+            duration: { min: 0.5, max: 1.2 },
+            delay: 0,
+            ease: "power2.inOut",
+          },
         },
       });
 
@@ -263,12 +302,21 @@ export default function Landing() {
         .to(".mission-line", { opacity: 1, y: 0, stagger: 0.18, duration: 0.6 }, 1.9);
 
       // ---- Fase C: Sección 3 → Sección 4 (servicios) ----
-      tl.to(".layer-picnic", { opacity: 0, duration: 1 }, 2.7)
-        .to(".mission-box", { opacity: 0, duration: 0.8 }, 2.7)
-        .to(".layer-s4", { opacity: 1, duration: 0.4 }, 2.75)
-        .to(".card-left", { xPercent: 0, opacity: 1, duration: 1 }, 2.85)
-        .to(".card-center", { yPercent: 0, opacity: 1, duration: 1 }, 2.85)
-        .to(".card-right", { xPercent: 0, opacity: 1, duration: 1 }, 2.85);
+      /*
+        ANTES el fade-out empezaba en t=2.7, pero el texto de misión
+        termina de aparecer en t≈3.04 (4 líneas × stagger 0.18 + duration 0.6,
+        arrancando en t=1.9). El picnic empezaba a desaparecer antes de que
+        la última línea terminara de aparecer.
+
+        AHORA: Phase C empieza en t=3.8 → ~0.75s de margen tras el último
+        fade-in del texto, suficiente para leer la sección completa.
+      */
+      tl.to(".layer-picnic", { opacity: 0, duration: 1 }, 3.8)
+        .to(".mission-box", { opacity: 0, duration: 0.8 }, 3.8)
+        .to(".layer-s4", { opacity: 1, duration: 0.4 }, 3.85)
+        .to(".card-left", { xPercent: 0, opacity: 1, duration: 1 }, 3.95)
+        .to(".card-center", { yPercent: 0, opacity: 1, duration: 1 }, 3.95)
+        .to(".card-right", { xPercent: 0, opacity: 1, duration: 1 }, 3.95);
         /* (eliminada la animación de opacity de .card-img — ver comentario arriba) */
     }, stageRef);
 
@@ -414,20 +462,32 @@ export default function Landing() {
               </div>
             ))}
           </div>
+          {/*
+            Estos bloques antes usaban placeholder-green. Ahora muestran
+            productos reales de la tienda (mismos datos que /tienda vía
+            MOCK_PRODUCTS), enlazando al catálogo.
+          */}
           <div className="kiori-container collection-grid reveal">
-            <div className="coll-card coll-photo">
+            <Link href="/tienda" className="coll-card coll-photo">
               <img src="/landing/yoga-pose.jpg" alt="Colección Kiori" />
               <span className="coll-link">VER COLECCIÓN →</span>
-            </div>
-            {[0, 1].map((i) => (
-              <div key={i} className="coll-card placeholder-card">
-                <span className="coll-link dark">VER COLECCIÓN →</span>
-              </div>
+            </Link>
+            {MOCK_PRODUCTS.slice(0, 2).map((p) => (
+              <Link key={p.id} href="/tienda" className="coll-card coll-photo">
+                <img src={p.imageUrl} alt={p.name} />
+                <span className="coll-cap">
+                  {p.name}
+                  <b>${p.price} MXN</b>
+                </span>
+              </Link>
             ))}
           </div>
           <div className="kiori-container collection-row reveal">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="coll-mini placeholder-card" />
+            {MOCK_PRODUCTS.slice(2, 7).map((p) => (
+              <Link key={p.id} href="/tienda" className="coll-mini" aria-label={p.name}>
+                <img src={p.imageUrl} alt={p.name} />
+                <span className="coll-cap mini">{p.name}</span>
+              </Link>
             ))}
           </div>
         </section>
@@ -464,7 +524,7 @@ function SignupSection() {
   return (
     <div className="kiori-container signup-grid">
       <div className="signup-left">
-        <img className="signup-logo" src="/landing/logo-teal.png" alt="Kiori" />
+        <img className="signup-logo" src="/landing/logo-kiori.png" alt="Kiori" />
         <img className="signup-illu" src="/landing/signup-illustration.png" alt="" />
       </div>
       <div className="signup-right">
@@ -486,7 +546,7 @@ function SignupSection() {
               <input type="checkbox" /> <span>RECORDAR USUARIO</span>
             </label>
             <Link href="/registrarse" className="btn-pill btn-sage signup-btn">
-              <span className="signup-icon">⇨</span> SIGN UP
+              <span className="signup-icon">⇨</span> REGÍSTRATE
             </Link>
           </div>
         </form>
@@ -700,7 +760,13 @@ function LandingStyles() {
       */
       .hero-cta-bottom {
         position: absolute;
-        bottom: clamp(2rem, 5vh, 4.5rem);
+        /*
+          CAMBIO: el botón sube desde el borde inferior hasta quedar a
+          media altura entre el texto del hero (centrado verticalmente,
+          ~50vh) y el borde inferior de la pantalla. ~22vh desde abajo
+          ≈ punto medio de esa franja.
+        */
+        bottom: clamp(7rem, 22vh, 15rem);
         left: 50%;
         transform: translateX(-50%);
         white-space: nowrap;
@@ -730,8 +796,10 @@ function LandingStyles() {
       }
       .s2-title .italic-accent { font-size: inherit; }
       .s2-paragraph {
-        color: var(--color-ink); opacity: .85; max-width: 30rem; line-height: 1.8;
-        margin-bottom: 2rem; font-size: clamp(.95rem, 1.2vw, 1.05rem);
+        /* Raleway, verde salvia de la marca y tamaño mayor (pedido del cliente) */
+        font-family: 'Raleway', var(--font-body), sans-serif;
+        color: var(--color-sage); opacity: 1; max-width: 34rem; line-height: 1.75;
+        margin-bottom: 2rem; font-size: clamp(1.15rem, 1.7vw, 1.5rem);
       }
 
       /*
@@ -921,7 +989,7 @@ function LandingStyles() {
       */
       .svc-card {
         background: var(--color-rose);
-        border: 3px solid #d99c93; /* marco rojo pastel saturado */
+        border: 15px solid #d99c93; /* marco rojo pastel saturado — 5x más grueso (era 3px) */
         border-radius: 24px;
         padding: 1.6rem 1.2rem 1.8rem;
         aspect-ratio: 0.68; /* del SVG: 240/353 */
@@ -1021,15 +1089,27 @@ function LandingStyles() {
         display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: clamp(1rem, 2vw, 1.6rem);
         margin-bottom: clamp(1rem, 2vw, 1.6rem);
       }
-      .coll-card { border-radius: 16px; overflow: hidden; position: relative; min-height: 12rem; }
+      .coll-card { border-radius: 16px; overflow: hidden; position: relative; min-height: 12rem; display: block; text-decoration: none; }
       .coll-photo img { width: 100%; height: 100%; object-fit: cover; }
       .coll-link {
         position: absolute; bottom: 1rem; right: 1rem; color: #fff;
         font-family: var(--font-display); font-size: .72rem; letter-spacing: .12em;
       }
       .coll-link.dark { color: var(--color-sage); }
+      /* Etiqueta de producto (nombre + precio) sobre la imagen de la tienda */
+      .coll-cap {
+        position: absolute; left: 0; right: 0; bottom: 0;
+        padding: 1.6rem .95rem .85rem;
+        background: linear-gradient(transparent, rgba(26,26,26,.7));
+        color: #fff; font-family: var(--font-display);
+        font-size: .92rem; letter-spacing: .03em; line-height: 1.3;
+        display: flex; flex-direction: column; gap: .15rem;
+      }
+      .coll-cap b { font-weight: 700; font-size: .85rem; opacity: .95; }
+      .coll-cap.mini { padding: 1rem .55rem .5rem; font-size: .7rem; letter-spacing: .02em; }
       .collection-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(.6rem, 1.4vw, 1.2rem); }
-      .coll-mini { border-radius: 14px; aspect-ratio: 3/4; }
+      .coll-mini { border-radius: 14px; aspect-ratio: 3/4; position: relative; overflow: hidden; display: block; text-decoration: none; }
+      .coll-mini img { width: 100%; height: 100%; object-fit: cover; }
 
       /* ====== SECCIÓN 6 — Clases ====== */
       .clases { background: var(--color-blush); padding-bottom: clamp(3rem, 6vw, 6rem); }

@@ -54,7 +54,7 @@ export default function Navbar() {
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 76 }}
       >
         <Link href="/" aria-label="Inicio Kiori" style={{ display: "flex", alignItems: "center" }}>
-          <Image src="/landing/logo-teal.png" alt="Kiori" width={64} height={75} priority style={{ height: 46, width: "auto" }} />
+          <Image src="/landing/logo-kiori.png" alt="Kiori" width={454} height={532} priority style={{ height: 46, width: "auto" }} />
         </Link>
 
         {/* Links de escritorio */}
