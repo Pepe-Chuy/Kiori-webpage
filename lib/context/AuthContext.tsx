@@ -20,14 +20,26 @@ async function fetchProfile(
   supabase: ReturnType<typeof createClient>,
   userId: string,
   email: string
-): Promise<SessionUser | null> {
+): Promise<SessionUser> {
   const { data } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .single();
 
-  if (!data) return null;
+  // Fallback: profile row missing (table not set up yet, or trigger didn't fire)
+  if (!data) {
+    return {
+      id: userId,
+      name: email.split("@")[0],
+      email,
+      role: "user",
+      puntosKiori: 0,
+      referralCode: "",
+      subscriptionStatus: "none",
+      subscriptionTier: null,
+    };
+  }
 
   return {
     id: userId,
@@ -35,7 +47,7 @@ async function fetchProfile(
     email,
     role: data.role,
     puntosKiori: data.puntos_kiori,
-    referralCode: data.referral_code,
+    referralCode: data.referral_code ?? "",
     subscriptionStatus: data.subscription_status,
     subscriptionTier: data.subscription_tier,
   };
@@ -71,8 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { ok: false, error: error.message };
+
+    // Set user immediately so the page we redirect to already has it —
+    // avoids the race where router.push fires before onAuthStateChange resolves.
+    if (data.session?.user) {
+      const profile = await fetchProfile(supabase, data.session.user.id, email);
+      setUser(profile);
+    }
+
     return { ok: true };
   }
 
