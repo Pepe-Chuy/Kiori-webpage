@@ -50,8 +50,9 @@ async function fetchProfile(
     role: data.role,
     puntosKiori: data.puntos_kiori,
     referralCode: data.referral_code ?? "",
-    subscriptionStatus: data.subscription_status,
-    subscriptionTier: data.subscription_tier,
+    // Admins always have full access regardless of DB value
+    subscriptionStatus: data.role === "admin" ? "active" : data.subscription_status,
+    subscriptionTier: data.role === "admin" ? (data.subscription_tier ?? "mensual") : data.subscription_tier,
   };
 }
 
