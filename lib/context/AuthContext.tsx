@@ -10,8 +10,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   register: (data: { name: string; email: string; password: string; referralCode?: string }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
-  activateSubscription: (tier: "mensual" | "trimestral" | "anual") => void;
-  cancelSubscription: () => void;
+  activateSubscription: (tier: "mensual" | "trimestral" | "anual") => Promise<void>;
+  cancelSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -21,11 +21,13 @@ async function fetchProfile(
   userId: string,
   email: string
 ): Promise<SessionUser> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .single();
+
+  if (error) console.warn("[fetchProfile] Supabase error:", error.message, "— code:", error.code);
 
   // Fallback: profile row missing (table not set up yet, or trigger didn't fire)
   if (!data) {

@@ -69,9 +69,6 @@ export function LoginForm({ redirect }: { redirect?: string }) {
         <button type="button" className="btn-pill btn-outline" style={{ width: "100%", marginTop: ".7rem" }}>
           Continuar con Google
         </button>
-        <p className="muted" style={{ fontSize: ".78rem", marginTop: "1rem" }}>
-          Demo: usa cualquier correo. Para el panel admin entra con <strong>admin@kiori.mx</strong>.
-        </p>
       </form>
     </AuthShell>
   );

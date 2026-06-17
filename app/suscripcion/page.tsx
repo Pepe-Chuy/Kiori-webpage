@@ -1,22 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import { SUBSCRIPTION_PLANS, SUBSCRIPTION_BENEFITS } from "@/lib/constants";
 import PageBanner from "@/components/ui/PageBanner";
 
-// /suscripcion — Página pública de planes y beneficios (kiori_spec.md §8).
 export default function SuscripcionPage() {
   const { user, activateSubscription } = useAuth();
+  const router = useRouter();
 
-  function handleChoose(tier: "mensual" | "trimestral" | "anual") {
-    // Si no hay sesión, se envía a registro; con sesión se "activa" (demo Stripe).
+  async function handleChoose(tier: "mensual" | "trimestral" | "anual") {
     if (!user) {
-      window.location.href = "/registrarse?redirect=/suscripcion";
+      router.push("/registrarse?redirect=/suscripcion");
       return;
     }
-    activateSubscription(tier);
-    window.location.href = "/perfil";
+    await activateSubscription(tier);
+    router.push("/perfil");
   }
 
   return (
