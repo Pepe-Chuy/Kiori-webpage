@@ -43,11 +43,14 @@ export interface SessionUser {
   subscriptionTier: "mensual" | "trimestral" | "anual" | null;
 }
 
+export type VideoProvider = "youtube" | "vimeo" | "bunny" | "mux";
+
 export interface OnlineClass {
   id: string;
   title: string;
   description: string;
-  youtubeVideoId: string;
+  youtubeVideoId: string;   // kept for backwards compat — stores the video ID for any provider
+  videoProvider: VideoProvider;
   type: "en-vivo" | "grabada";
   instructor: string;
   durationMinutes: number;

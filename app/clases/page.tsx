@@ -8,7 +8,34 @@ import { MOCK_CLASSES } from "@/lib/mock/classes";
 import PageBanner from "@/components/ui/PageBanner";
 import type { OnlineClass } from "@/lib/types";
 
-// /clases — Sólo para suscriptoras activas (kiori_spec.md §9).
+function embedUrl(c: import("@/lib/types").OnlineClass): string {
+  const id = c.youtubeVideoId;
+  switch (c.videoProvider) {
+    case "vimeo":
+      return `https://player.vimeo.com/video/${id}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`;
+    case "bunny":
+      // id format: "libraryId/videoId"
+      return `https://iframe.mediadelivery.net/embed/${id}?autoplay=true&preload=true`;
+    case "mux":
+      return `https://stream.mux.com/${id}.m3u8`;
+    default: // youtube
+      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+  }
+}
+
+function thumbnailUrl(c: import("@/lib/types").OnlineClass): string {
+  const id = c.youtubeVideoId;
+  switch (c.videoProvider) {
+    case "vimeo":
+      return `https://vumbnail.com/${id}.jpg`;
+    case "bunny":
+      return `https://vz-cdn.b-cdn.net/${id.split("/")[1]}/thumbnail.jpg`;
+    default:
+      return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+  }
+}
+
+// /clases — Sólo para suscriptoras activas.
 export default function ClasesPage() {
   const { user, ready } = useAuth();
   const [playing, setPlaying] = useState<OnlineClass | null>(null);
@@ -77,7 +104,7 @@ export default function ClasesPage() {
           {published.map((c) => (
             <article key={c.id} className="card clase">
               <button className="clase-thumb" onClick={() => setPlaying(c)} aria-label={`Reproducir ${c.title}`}>
-                <img src={`https://i.ytimg.com/vi/${c.youtubeVideoId}/maxresdefault.jpg`} alt={c.title} />
+                <img src={thumbnailUrl(c)} alt={c.title} />
                 <span className="play">▶</span>
                 {c.type === "en-vivo" && <span className="live">EN VIVO</span>}
               </button>
@@ -94,21 +121,17 @@ export default function ClasesPage() {
         </div>
       </div>
 
-      {/* Reproductor (YouTube privacy-enhanced, sin exponer la URL directa) */}
       {playing && (
         <div className="modal-backdrop" onClick={() => setPlaying(null)}>
           <div className="player" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setPlaying(null)} aria-label="Cerrar">×</button>
             <div className="player-frame">
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${playing.youtubeVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                src={embedUrl(playing)}
                 title={playing.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
-              {/* Blocks the YouTube info-card overlay (copy link / watch on YouTube)
-                  that appears in the top-left corner on hover */}
-              <div className="yt-shield" />
             </div>
             <h3 style={{ color: "var(--color-sage)", marginTop: "1rem" }}>{playing.title}</h3>
           </div>
