@@ -101,11 +101,14 @@ export default function ClasesPage() {
             <button className="modal-close" onClick={() => setPlaying(null)} aria-label="Cerrar">×</button>
             <div className="player-frame">
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${playing.youtubeVideoId}?rel=0&modestbranding=1`}
+                src={`https://www.youtube-nocookie.com/embed/${playing.youtubeVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
                 title={playing.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+              {/* Blocks the YouTube info-card overlay (copy link / watch on YouTube)
+                  that appears in the top-left corner on hover */}
+              <div className="yt-shield" />
             </div>
             <h3 style={{ color: "var(--color-sage)", marginTop: "1rem" }}>{playing.title}</h3>
           </div>
@@ -130,6 +133,8 @@ export default function ClasesPage() {
         .modal-close { position: absolute; top: -2.4rem; right: 0; background: none; border: none; font-size: 2rem; color: #fff; }
         .player-frame { position: relative; padding-top: 56.25%; border-radius: 16px; overflow: hidden; background: #000; }
         .player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        /* Covers the YouTube info-card / copy-link overlay in the top-left corner */
+        .yt-shield { position: absolute; top: 0; left: 0; width: 40%; height: 15%; z-index: 2; pointer-events: none; }
         .player h3 { color: var(--color-blush); }
       `}</style>
     </div>
