@@ -1,52 +1,118 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { MOCK_CLASSES } from "@/lib/mock/classes";
+import type { OnlineClass } from "@/lib/types";
 
-// /admin/clases — Gestión de clases (kiori_spec.md §12).
+const EMPTY_FORM = { title: "", youtubeVideoId: "", instructor: "Kiori Studio", category: "", type: "grabada", durationMinutes: 45, description: "" };
+
 export default function AdminClases() {
-  const [classes, setClasses] = useState(MOCK_CLASSES);
+  const [classes, setClasses]   = useState<OnlineClass[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing]   = useState<OnlineClass | null>(null);
+  const [form, setForm]         = useState(EMPTY_FORM);
+  const [saving, setSaving]     = useState(false);
 
-  function togglePublish(id: string) {
-    setClasses((c) => c.map((x) => (x.id === id ? { ...x, isPublished: !x.isPublished } : x)));
+  const supabase = createClient();
+
+  useEffect(() => { load(); }, []);
+
+  async function load() {
+    const { data } = await supabase.from("classes").select("*").order("created_at", { ascending: false });
+    if (!data || data.length === 0) { setClasses(MOCK_CLASSES); return; }
+    setClasses(data.map(row2class));
+  }
+
+  function row2class(c: any): OnlineClass {
+    return {
+      id: c.id, title: c.title, description: c.description ?? "",
+      youtubeVideoId: c.youtube_video_id, type: c.type,
+      instructor: c.instructor ?? "", durationMinutes: c.duration_minutes ?? 0,
+      category: c.category ?? "", isPublished: c.is_published,
+    };
+  }
+
+  function openNew() { setEditing(null); setForm(EMPTY_FORM); setShowForm(true); }
+  function openEdit(c: OnlineClass) {
+    setEditing(c);
+    setForm({ title: c.title, youtubeVideoId: c.youtubeVideoId, instructor: c.instructor, category: c.category, type: c.type, durationMinutes: c.durationMinutes, description: c.description });
+    setShowForm(true);
+  }
+
+  async function save() {
+    setSaving(true);
+    const payload = {
+      title: form.title, youtube_video_id: form.youtubeVideoId, instructor: form.instructor,
+      category: form.category, type: form.type, duration_minutes: Number(form.durationMinutes),
+      description: form.description,
+    };
+    if (editing) {
+      await supabase.from("classes").update(payload).eq("id", editing.id);
+    } else {
+      await supabase.from("classes").insert({ ...payload, is_published: false });
+    }
+    setSaving(false);
+    setShowForm(false);
+    load();
+  }
+
+  async function togglePublish(c: OnlineClass) {
+    await supabase.from("classes").update({ is_published: !c.isPublished }).eq("id", c.id);
+    setClasses((prev) => prev.map((x) => x.id === c.id ? { ...x, isPublished: !c.isPublished } : x));
+  }
+
+  async function del(id: string) {
+    if (!confirm("¿Eliminar esta clase?")) return;
+    await supabase.from("classes").delete().eq("id", id);
+    setClasses((prev) => prev.filter((x) => x.id !== id));
   }
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <h1 className="admin-h1" style={{ marginBottom: 0 }}>Clases</h1>
-        <button className="btn-pill btn-nude" onClick={() => setShowForm((s) => !s)}>+ Nueva clase</button>
+        <button className="btn-pill btn-nude" onClick={openNew}>+ Nueva clase</button>
       </div>
 
       {showForm && (
         <div className="card" style={{ padding: "1.6rem", margin: "1.5rem 0" }}>
-          <h2 className="admin-h2">Publicar clase</h2>
+          <h2 className="admin-h2">{editing ? "Editar clase" : "Nueva clase"}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-            <div className="field-group"><label>Título</label><input /></div>
-            <div className="field-group"><label>YouTube Video ID</label><input placeholder="dQw4w9WgXcQ" /></div>
-            <div className="field-group"><label>Instructor</label><input /></div>
-            <div className="field-group"><label>Categoría</label><input placeholder="yoga / barre / meditación" /></div>
-            <div className="field-group"><label>Tipo</label><select><option>grabada</option><option>en-vivo</option></select></div>
-            <div className="field-group"><label>Duración (min)</label><input type="number" /></div>
+            <div className="field-group"><label>Título</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+            <div className="field-group"><label>YouTube Video ID</label><input placeholder="FCfy7WWt_Gw" value={form.youtubeVideoId} onChange={(e) => setForm({ ...form, youtubeVideoId: e.target.value })} /></div>
+            <div className="field-group"><label>Instructor</label><input value={form.instructor} onChange={(e) => setForm({ ...form, instructor: e.target.value })} /></div>
+            <div className="field-group"><label>Categoría</label><input placeholder="yoga / barre / pilates" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+            <div className="field-group"><label>Tipo</label>
+              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                <option value="grabada">grabada</option>
+                <option value="en-vivo">en-vivo</option>
+              </select>
+            </div>
+            <div className="field-group"><label>Duración (min)</label><input type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: Number(e.target.value) })} /></div>
           </div>
-          <button className="btn-pill btn-sage">Guardar clase</button>
+          <div className="field-group" style={{ marginTop: "1rem" }}><label>Descripción</label><textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} style={{ width: "100%", resize: "vertical" }} /></div>
+          <div style={{ display: "flex", gap: ".8rem", marginTop: "1rem" }}>
+            <button className="btn-pill btn-sage" onClick={save} disabled={saving}>{saving ? "Guardando…" : "Guardar"}</button>
+            <button className="btn-pill btn-outline" onClick={() => setShowForm(false)}>Cancelar</button>
+          </div>
         </div>
       )}
 
       <table className="adm-table" style={{ marginTop: "1.5rem" }}>
-        <thead><tr><th>Título</th><th>Tipo</th><th>Instructor</th><th>Video ID</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Título</th><th>Tipo</th><th>Categoría</th><th>Video ID</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody>
           {classes.map((c) => (
             <tr key={c.id}>
               <td>{c.title}</td>
               <td><span className={`adm-badge ${c.type === "en-vivo" ? "nude" : ""}`}>{c.type}</span></td>
-              <td>{c.instructor}</td>
+              <td>{c.category}</td>
               <td><code>{c.youtubeVideoId}</code></td>
               <td><span className={`adm-badge ${c.isPublished ? "green" : ""}`}>{c.isPublished ? "Publicada" : "Oculta"}</span></td>
               <td>
-                <button className="adm-btn" onClick={() => togglePublish(c.id)}>{c.isPublished ? "Ocultar" : "Publicar"}</button>
-                <button className="adm-btn">Eliminar</button>
+                <button className="adm-btn" onClick={() => openEdit(c)}>Editar</button>
+                <button className="adm-btn" onClick={() => togglePublish(c)}>{c.isPublished ? "Ocultar" : "Publicar"}</button>
+                <button className="adm-btn" onClick={() => del(c.id)}>Eliminar</button>
               </td>
             </tr>
           ))}

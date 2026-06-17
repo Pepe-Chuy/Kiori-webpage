@@ -53,7 +53,7 @@ export default function PerfilPage() {
               <div className="grid2">
                 <Field label="Nombre" value={user.name} />
                 <Field label="Correo" value={user.email} />
-                <Field label="Ubicación" value="Ciudad de México" />
+                <Field label="Ubicación" value="Guadalajara" />
                 <Field label="Edad" value="—" />
               </div>
               <button className="btn-pill btn-outline" style={{ marginTop: "1.2rem" }}>Editar datos</button>

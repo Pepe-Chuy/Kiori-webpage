@@ -42,7 +42,7 @@ export default function Footer() {
           <h4 style={{ fontSize: ".8rem", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: "1rem" }}>Contacto</h4>
           <p style={{ fontSize: ".85rem", opacity: 0.85, lineHeight: 1.9 }}>
             hola@kiori.mx<br />
-            Ciudad de México<br />
+            Guadalajara<br />
             <span style={{ opacity: 0.7 }}>Instagram · TikTok · Pinterest</span>
           </p>
         </div>

@@ -1,11 +1,7 @@
 "use client";
 
-// Contexto de autenticación.
-// NOTA: implementación mock basada en localStorage para el frontend actual.
-// En producción se reemplaza por NextAuth.js (kiori_spec.md §6) manteniendo
-// la misma interfaz (user, login, logout, register).
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createClient } from "@/lib/supabase/client";
 import type { SessionUser } from "@/lib/types";
 
 interface AuthContextValue {
@@ -14,89 +10,107 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   register: (data: { name: string; email: string; password: string; referralCode?: string }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
-  // Activa una suscripción de demo (en producción: Stripe Subscriptions).
   activateSubscription: (tier: "mensual" | "trimestral" | "anual") => void;
   cancelSubscription: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const STORAGE_KEY = "kiori_session";
 
-// Genera un código de referido KIORI-XXXXX (§6).
-function generateReferralCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return `KIORI-${code}`;
+async function fetchProfile(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  email: string
+): Promise<SessionUser | null> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (!data) return null;
+
+  return {
+    id: userId,
+    name: data.name,
+    email,
+    role: data.role,
+    puntosKiori: data.puntos_kiori,
+    referralCode: data.referral_code,
+    subscriptionStatus: data.subscription_status,
+    subscriptionTier: data.subscription_tier,
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
+  const supabase = createClient();
 
-  // Restaura sesión persistida al montar.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw));
-    } catch {
-      /* noop */
-    }
-    setReady(true);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchProfile(supabase, session.user.id, session.user.email!);
+        setUser(profile);
+      }
+      setReady(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          const profile = await fetchProfile(supabase, session.user.id, session.user.email!);
+          setUser(profile);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function persist(next: SessionUser | null) {
-    setUser(next);
-    if (next) localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    else localStorage.removeItem(STORAGE_KEY);
-  }
-
   async function login(email: string, password: string) {
-    if (!email || !password) return { ok: false, error: "Ingresa correo y contraseña." };
-    // Demo: cualquier credencial válida crea sesión. admin@kiori.mx => rol admin.
-    const isAdmin = email.trim().toLowerCase() === "admin@kiori.mx";
-    persist({
-      id: "u_" + btoa(email).slice(0, 8),
-      name: email.split("@")[0],
-      email,
-      role: isAdmin ? "admin" : "user",
-      puntosKiori: 150,
-      referralCode: generateReferralCode(),
-      subscriptionStatus: "none",
-      subscriptionTier: null,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
 
-  async function register(data: { name: string; email: string; password: string; referralCode?: string }) {
-    if (!data.name || !data.email || !data.password) {
-      return { ok: false, error: "Completa todos los campos." };
-    }
-    persist({
-      id: "u_" + btoa(data.email).slice(0, 8),
-      name: data.name,
+  async function register(data: {
+    name: string;
+    email: string;
+    password: string;
+    referralCode?: string;
+  }) {
+    const { error } = await supabase.auth.signUp({
       email: data.email,
-      role: data.email.trim().toLowerCase() === "admin@kiori.mx" ? "admin" : "user",
-      puntosKiori: 0,
-      referralCode: generateReferralCode(),
-      subscriptionStatus: "none",
-      subscriptionTier: null,
+      password: data.password,
+      options: { data: { name: data.name } },
     });
+    if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
 
   function logout() {
-    persist(null);
+    supabase.auth.signOut();
   }
 
-  function activateSubscription(tier: "mensual" | "trimestral" | "anual") {
+  async function activateSubscription(tier: "mensual" | "trimestral" | "anual") {
     if (!user) return;
-    persist({ ...user, subscriptionStatus: "active", subscriptionTier: tier });
+    await supabase
+      .from("profiles")
+      .update({ subscription_status: "active", subscription_tier: tier })
+      .eq("id", user.id);
+    setUser({ ...user, subscriptionStatus: "active", subscriptionTier: tier });
   }
 
-  function cancelSubscription() {
+  async function cancelSubscription() {
     if (!user) return;
-    persist({ ...user, subscriptionStatus: "canceled" });
+    await supabase
+      .from("profiles")
+      .update({ subscription_status: "canceled" })
+      .eq("id", user.id);
+    setUser({ ...user, subscriptionStatus: "canceled" });
   }
 
   return (

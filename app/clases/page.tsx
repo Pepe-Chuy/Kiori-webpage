@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 import { MOCK_CLASSES } from "@/lib/mock/classes";
 import PageBanner from "@/components/ui/PageBanner";
 import type { OnlineClass } from "@/lib/types";
@@ -11,6 +12,34 @@ import type { OnlineClass } from "@/lib/types";
 export default function ClasesPage() {
   const { user, ready } = useAuth();
   const [playing, setPlaying] = useState<OnlineClass | null>(null);
+  const [classes, setClasses] = useState<OnlineClass[]>([]);
+
+  useEffect(() => {
+    if (user?.subscriptionStatus !== "active") return;
+    const supabase = createClient();
+    supabase
+      .from("classes")
+      .select("*")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (!data || data.length === 0) {
+          setClasses(MOCK_CLASSES);
+          return;
+        }
+        setClasses(data.map((c) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description ?? "",
+          youtubeVideoId: c.youtube_video_id,
+          type: c.type,
+          instructor: c.instructor ?? "",
+          durationMinutes: c.duration_minutes ?? 0,
+          category: c.category ?? "",
+          isPublished: c.is_published,
+        })));
+      });
+  }, [user?.subscriptionStatus]);
 
   if (!ready) return <div className="page" />;
 
@@ -35,7 +64,7 @@ export default function ClasesPage() {
     );
   }
 
-  const published = MOCK_CLASSES.filter((c) => c.isPublished);
+  const published = classes;
 
   return (
     <div className="page">
@@ -48,7 +77,7 @@ export default function ClasesPage() {
           {published.map((c) => (
             <article key={c.id} className="card clase">
               <button className="clase-thumb" onClick={() => setPlaying(c)} aria-label={`Reproducir ${c.title}`}>
-                <img src={`https://i.ytimg.com/vi/${c.youtubeVideoId}/hqdefault.jpg`} alt={c.title} />
+                <img src={`https://i.ytimg.com/vi/${c.youtubeVideoId}/maxresdefault.jpg`} alt={c.title} />
                 <span className="play">▶</span>
                 {c.type === "en-vivo" && <span className="live">EN VIVO</span>}
               </button>
@@ -85,8 +114,8 @@ export default function ClasesPage() {
 
       <style jsx>{`
         .clases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .clase-thumb { position: relative; border: none; padding: 0; background: none; cursor: pointer; display: block; }
-        .clase-thumb img { width: 100%; height: 180px; object-fit: cover; }
+        .clase-thumb { position: relative; border: none; padding: 0; background: none; cursor: pointer; display: block; width: 100%; aspect-ratio: 16/9; overflow: hidden; }
+        .clase-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
         .play {
           position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
           color: #fff; font-size: 2.2rem; background: rgba(63,91,90,.25); transition: background .2s ease;

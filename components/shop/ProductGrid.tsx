@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { MOCK_PRODUCTS } from "@/lib/mock/products";
 import { PRODUCT_CATEGORIES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/lib/context/CartContext";
 import type { Product } from "@/lib/types";
 
@@ -10,15 +11,36 @@ import type { Product } from "@/lib/types";
 // El carrito funciona SIN sesión (los invitados pueden agregar productos).
 export default function ProductGrid() {
   const { addItem } = useCart();
-  const [filter, setFilter] = useState<string>("Todas");
-  const [selected, setSelected] = useState<Product | null>(null);
-  const [added, setAdded] = useState<string | null>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [filter, setFilter]           = useState<string>("Todas");
+  const [selected, setSelected]       = useState<Product | null>(null);
+  const [added, setAdded]             = useState<string | null>(null);
 
-  const products = useMemo(() => {
-    const active = MOCK_PRODUCTS.filter((p) => p.isActive);
-    if (filter === "Todas") return active;
-    return active.filter((p) => p.categories.includes(filter as any));
-  }, [filter]);
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (!data || data.length === 0) {
+          setAllProducts(MOCK_PRODUCTS.filter((p) => p.isActive));
+          return;
+        }
+        setAllProducts(data.map((p) => ({
+          id: p.id, name: p.name, description: p.description ?? "",
+          price: p.price, categories: p.categories ?? [],
+          quantity: p.quantity,
+          imageUrl: p.image_url ?? "/landing/products-flatlay.jpg",
+          isActive: p.is_active,
+        })));
+      });
+  }, []);
+
+  const products = filter === "Todas"
+    ? allProducts
+    : allProducts.filter((p) => p.categories.includes(filter as any));
 
   function handleAdd(p: Product) {
     addItem(p, 1);
