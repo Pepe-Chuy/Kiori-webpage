@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import MuxPlayer from "@mux/mux-player-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { MOCK_CLASSES } from "@/lib/mock/classes";
@@ -105,13 +104,10 @@ export default function ClasesPage() {
           <div className="player" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setPlaying(null)} aria-label="Cerrar">×</button>
             <div className="player-frame">
-              <MuxPlayer
-                playbackId={playing.youtubeVideoId}
-                streamType="on-demand"
-                autoPlay
-                metadata={{ video_title: playing.title }}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%" } as any}
+              <iframe
+                src={`https://player.mux.com/${playing.youtubeVideoId}?autoplay=1`}
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
               />
             </div>
             <h3 style={{ color: "var(--color-sage)", marginTop: "1rem" }}>{playing.title}</h3>
