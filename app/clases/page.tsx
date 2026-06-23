@@ -2,37 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import MuxPlayer from "@mux/mux-player-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { MOCK_CLASSES } from "@/lib/mock/classes";
 import PageBanner from "@/components/ui/PageBanner";
 import type { OnlineClass } from "@/lib/types";
 
-function embedUrl(c: import("@/lib/types").OnlineClass): string {
-  const id = c.youtubeVideoId;
-  switch (c.videoProvider) {
-    case "vimeo":
-      return `https://player.vimeo.com/video/${id}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`;
-    case "bunny":
-      // id format: "libraryId/videoId"
-      return `https://iframe.mediadelivery.net/embed/${id}?autoplay=true&preload=true`;
-    case "mux":
-      return `https://stream.mux.com/${id}.m3u8`;
-    default: // youtube
-      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
-  }
-}
-
-function thumbnailUrl(c: import("@/lib/types").OnlineClass): string {
-  const id = c.youtubeVideoId;
-  switch (c.videoProvider) {
-    case "vimeo":
-      return `https://vumbnail.com/${id}.jpg`;
-    case "bunny":
-      return `https://vz-cdn.b-cdn.net/${id.split("/")[1]}/thumbnail.jpg`;
-    default:
-      return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
-  }
+function thumbnailUrl(playbackId: string): string {
+  return `https://image.mux.com/${playbackId}/thumbnail.jpg?time=1`;
 }
 
 // /clases — Sólo para suscriptoras activas.
@@ -59,6 +37,7 @@ export default function ClasesPage() {
           title: c.title,
           description: c.description ?? "",
           youtubeVideoId: c.youtube_video_id,
+          videoProvider: c.video_provider ?? "youtube",
           type: c.type,
           instructor: c.instructor ?? "",
           durationMinutes: c.duration_minutes ?? 0,
@@ -104,7 +83,7 @@ export default function ClasesPage() {
           {published.map((c) => (
             <article key={c.id} className="card clase">
               <button className="clase-thumb" onClick={() => setPlaying(c)} aria-label={`Reproducir ${c.title}`}>
-                <img src={thumbnailUrl(c)} alt={c.title} />
+                <img src={thumbnailUrl(c.youtubeVideoId)} alt={c.title} />
                 <span className="play">▶</span>
                 {c.type === "en-vivo" && <span className="live">EN VIVO</span>}
               </button>
@@ -126,11 +105,13 @@ export default function ClasesPage() {
           <div className="player" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setPlaying(null)} aria-label="Cerrar">×</button>
             <div className="player-frame">
-              <iframe
-                src={embedUrl(playing)}
-                title={playing.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+              <MuxPlayer
+                playbackId={playing.youtubeVideoId}
+                streamType="on-demand"
+                autoPlay
+                metadata={{ video_title: playing.title }}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%" } as any}
               />
             </div>
             <h3 style={{ color: "var(--color-sage)", marginTop: "1rem" }}>{playing.title}</h3>
@@ -156,8 +137,6 @@ export default function ClasesPage() {
         .modal-close { position: absolute; top: -2.4rem; right: 0; background: none; border: none; font-size: 2rem; color: #fff; }
         .player-frame { position: relative; padding-top: 56.25%; border-radius: 16px; overflow: hidden; background: #000; }
         .player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-        /* Covers the YouTube info-card / copy-link overlay in the top-left corner */
-        .yt-shield { position: absolute; top: 0; left: 0; width: 40%; height: 15%; z-index: 2; pointer-events: none; }
         .player h3 { color: var(--color-blush); }
       `}</style>
     </div>

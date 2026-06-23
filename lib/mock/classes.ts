@@ -1,12 +1,12 @@
 import type { OnlineClass } from "@/lib/types";
 
-// Clases mock (kiori_spec.md §9). Al lanzamiento se esperan ~2-3 clases.
 export const MOCK_CLASSES: OnlineClass[] = [
   {
     id: "class-1",
     title: "Barre",
     description: "Tonifica y activa tu energía con esta clase de barre de bajo impacto.",
-    youtubeVideoId: "FCfy7WWt_Gw",
+    youtubeVideoId: "vsIgRUPPOqdDuwNAO8iLOsgNKDvEAh102H1kVvPNkjpE",
+    videoProvider: "mux",
     type: "grabada",
     instructor: "Kiori Studio",
     durationMinutes: 45,
@@ -17,7 +17,8 @@ export const MOCK_CLASSES: OnlineClass[] = [
     id: "class-2",
     title: "Pilates",
     description: "Fortalece tu core y mejora tu postura con esta sesión de pilates consciente.",
-    youtubeVideoId: "BgaLGed5S_k",
+    youtubeVideoId: "tpAEHF026AHXffYdPtaqGkwXuZ7dW1PZ3nkreYpRoxCo",
+    videoProvider: "mux",
     type: "grabada",
     instructor: "Kiori Studio",
     durationMinutes: 40,
@@ -28,7 +29,8 @@ export const MOCK_CLASSES: OnlineClass[] = [
     id: "class-3",
     title: "Yoga",
     description: "Una secuencia suave para despertar el cuerpo y conectar con tu respiración.",
-    youtubeVideoId: "LN7htrEIctA",
+    youtubeVideoId: "AJsv95QAtxFouwuLesX02mEA7E1zM9tBOotytuaFONuE",
+    videoProvider: "mux",
     type: "grabada",
     instructor: "Kiori Studio",
     durationMinutes: 35,
